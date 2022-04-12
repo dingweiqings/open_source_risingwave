@@ -35,7 +35,54 @@ pub use stream::*;
 use crate::storage::{self, MetaStore, Transaction};
 
 pub type ActorId = u32;
-pub type FragmentId = u32;
+
+/// Id of a fragment
+#[derive(Clone, Copy, Debug, Hash, Eq, PartialEq, PartialOrd, Ord)]
+pub enum FragmentId {
+    /// The global allocated id of a fragment.
+    GlobalId(u32),
+    /// The local id of a fragment, need to be converted to global id if being used in the meta
+    /// service.
+    LocalId(u32),
+}
+
+impl FragmentId {
+    pub fn as_global_id(&self) -> u32 {
+        match self {
+            Self::GlobalId(id) => *id,
+            _ => panic!("FragmentId is not global id"),
+        }
+    }
+
+    pub fn as_local_id(&self) -> u32 {
+        match self {
+            Self::LocalId(id) => *id,
+            _ => panic!("FragmentId is not local id"),
+        }
+    }
+
+    pub fn is_global(&self) -> bool {
+        matches!(self, Self::GlobalId(id))
+    }
+
+    pub fn is_local(&self) -> bool {
+        matches!(self, Self::LocalId(id))
+    }
+
+    /// Convert local id to global id. Panics if the fragment id is not local, or fragment id >=
+    /// len.
+    pub fn to_global_id(&self, offset: u32, len: u32) -> Self {
+        let id = self.as_local_id();
+        assert!(
+            id < len,
+            "fragment id {} is out of range (offset: {}, len: {})",
+            id,
+            offset,
+            len
+        );
+        Self::GlobalId(id + offset)
+    }
+}
 
 pub trait Transactional {
     fn upsert_in_transaction(&self, trx: &mut Transaction) -> risingwave_common::error::Result<()>;

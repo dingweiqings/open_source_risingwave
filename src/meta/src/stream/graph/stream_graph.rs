@@ -107,7 +107,7 @@ impl StreamActorBuilder {
         });
         StreamActor {
             actor_id: self.actor_id,
-            fragment_id: self.fragment_id,
+            fragment_id: self.fragment_id.as_global_id(),
             nodes: Some(self.nodes.deref().clone()),
             dispatcher: match self.dispatcher.clone() {
                 Some(d) => vec![Dispatcher {

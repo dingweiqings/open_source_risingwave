@@ -55,7 +55,11 @@ impl MetadataModel for TableFragments {
     fn to_protobuf(&self) -> Self::ProstType {
         Self::ProstType {
             table_id: self.table_id.table_id(),
-            fragments: self.fragments.clone().into_iter().collect(),
+            fragments: self
+                .fragments
+                .into_iter()
+                .map(|(id, fragment)| (id.as_global_id(), fragment))
+                .collect(),
             actor_status: self.actor_status.clone().into_iter().collect(),
         }
     }
@@ -63,7 +67,11 @@ impl MetadataModel for TableFragments {
     fn from_protobuf(prost: Self::ProstType) -> Self {
         Self {
             table_id: TableId::new(prost.table_id),
-            fragments: prost.fragments.into_iter().collect(),
+            fragments: prost
+                .fragments
+                .into_iter()
+                .map(|(id, fragment)| (FragmentId::GlobalId(id), fragment))
+                .collect(),
             actor_status: prost.actor_status.into_iter().collect(),
         }
     }
